@@ -1,0 +1,14 @@
+<div class="admin-dashboard">
+  <h2>Admin Dashboard</h2>
+  <p>Welcome, {{ user.username }}!</p>
+
+  <div>
+    <button (click)="navigateToUserManagement()">User Management</button>
+  </div>
+  <div>
+    <button (click)="navigateToGroupManagement()">Group Management</button>
+  </div>
+  <div>
+    <button (click)="navigateToChannelManagement()">Channel Management</button>
+  </div>
+</div>

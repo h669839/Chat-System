@@ -1,0 +1,41 @@
+<div class="group-selection">
+    <h3>Groups</h3>
+    <ul>
+      <li *ngFor="let group of groups">
+        {{ group.name }}
+        <div *ngIf="currentUser.groups.includes(group.groupId); else registerInterest">
+          <button (click)="loadChannelsForGroup(group.groupId)">View Channels</button>
+          <button (click)="leaveGroup(group.groupId)">Leave Group</button>
+        </div>
+        <div>
+        <ng-template #registerInterest>
+          <button (click)="registerInterestInGroup(group.groupId)">Register Interest</button>
+        </ng-template>
+        </div>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="channel-selection" *ngIf="channels.length > 0">
+    <h3>Channels</h3>
+    <select title="selectedChannel" [(ngModel)]="selectedChannelId">
+      <option *ngFor="let channel of channels" [value]="channel.channelId">{{ channel.channelName }}</option>
+    </select>
+    <button (click)="joinChannel()">Join Channel</button>
+  </div>
+  
+  <div class="messages" *ngIf="messages.length > 0">
+    <h3>Messages</h3>
+    <div *ngFor="let message of messages">
+      <strong>{{ message.sender }}:</strong> {{ message.text }}
+    </div>
+  </div>
+  
+  <div class="new-message" *ngIf="selectedChannelId">
+    <input type="text" [(ngModel)]="newMessage" placeholder="Type your message" />
+    <button (click)="sendMessage()">Send</button>
+  </div>
+  
+  <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  

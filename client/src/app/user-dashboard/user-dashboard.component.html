@@ -1,0 +1,27 @@
+<div class="user-dashboard">
+    <h2>Welcome, {{ user.username }}!</h2>
+  
+    <div>
+      <h3>Your Groups</h3>
+      <ul>
+        <li *ngFor="let group of groups">
+          {{ group.name }}
+          <button (click)="loadUserChannels(group.groupId)">View Channels</button>
+        </li>
+      </ul>
+    </div>
+  
+    <div *ngIf="channels.length > 0">
+      <h3>Channels</h3>
+      <ul>
+        <li *ngFor="let channel of channels">
+          {{ channel.channelName }}
+          <button (click)="joinChannel(channel.channelId)">Join Channel</button>
+        </li>
+      </ul>
+    </div>
+  
+    <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  </div>
+  

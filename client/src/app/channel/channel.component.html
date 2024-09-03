@@ -1,0 +1,26 @@
+<div class="channel-management">
+    <h2>Channel Management</h2>
+  
+    <div>
+        <h3>Create Channel</h3>
+        <input type="text" [(ngModel)]="channelName" placeholder="Channel Name" />
+        <input type="text" [(ngModel)]="groupId" placeholder="Group ID" />
+        <button (click)="createChannel()">Create Channel</button>
+        <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+        <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+      </div>
+    
+  
+    <div class="channel-list">
+      <h3>Existing Channels</h3>
+      <ul>
+        <li *ngFor="let channel of channels">
+          {{ channel.channelName }} (Group ID: {{ channel.groupId }})
+          <input type="text" #username placeholder="Username to add/remove" />
+          <button (click)="addUserToChannel(channel.groupId, channel.channelId, username.value)">Add User</button>
+          <button (click)="removeUserFromChannel(channel.groupId, channel.channelId, username.value)">Remove User</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+  

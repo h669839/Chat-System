@@ -1,0 +1,40 @@
+<div class="user-management">
+    <h2>User Management</h2>
+  
+    <div class="form-container">
+      <h3>Create User</h3>
+      <form (submit)="createUser()">
+        <div>
+          <label for="username">Username:</label>
+          <input type="text" id="username" [(ngModel)]="username" name="username" required />
+        </div>
+        <div>
+          <label for="email">Email:</label>
+          <input type="email" id="email" [(ngModel)]="email" name="email" required />
+        </div>
+        <div>
+          <label for="role">Role:</label>
+          <select id="role" [(ngModel)]="role" name="role">
+            <option value="User">User</option>
+            <option value="Group Admin">Group Admin</option>
+          </select>
+        </div>
+        <button type="submit">Create User</button>
+      </form>
+      <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+    </div>
+  
+    <div class="user-list">
+      <h3>Existing Users</h3>
+      <ul>
+        <li *ngFor="let user of users">
+          {{ user.username }} ({{ user.roles.join(', ') }})
+          <button (click)="promoteUser(user.id)">Promote</button>
+          <button (click)="demoteUser(user.id)">Demote</button>
+          <button (click)="deleteUser(user.id)">Delete</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+  

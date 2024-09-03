@@ -1,0 +1,49 @@
+<div class="group-management">
+    <h2>Group Management</h2>
+  
+    <div>
+      <h3>Create Group</h3>
+      <input type="text" [(ngModel)]="groupName" placeholder="Group Name" />
+      <button (click)="createGroup()">Create Group</button>
+      <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+    </div>
+  
+    <div class="group-list">
+      <h3>Existing Groups</h3>
+      <ul>
+        <li *ngFor="let group of groups">
+          {{ group.name }} (Admins: {{ group.admins.join(', ') }})
+  
+          <div>
+            <input type="text" #username placeholder="Username to add/remove" />
+            <button (click)="addUserToGroup(group.groupId, username.value)">Add User</button>
+            <button (click)="removeUserFromGroup(group.groupId, username.value)">Remove User</button>
+          </div>  
+  
+          <div *ngIf="user.roles.includes('Super Admin')">
+            <input type="text" #usernameAction placeholder="Username to promote/demote" />
+            <button (click)="promoteUserToAdmin(group.groupId, usernameAction.value)">Promote to Admin</button>
+            <button (click)="demoteUserFromAdmin(group.groupId, usernameAction.value)">Demote from Admin</button>
+          </div>
+  
+          <!-- Interest requests management for Group Admins -->
+          <div *ngIf="user.roles.includes('Group Admin')">
+            <button (click)="loadInterestRequests(group.groupId)">View Interest Requests</button>
+            <div *ngIf="interestRequests.length > 0">
+              <h4>Pending Interest Requests</h4>
+              <ul>
+                <li *ngFor="let request of interestRequests">
+                  {{ request.username }}
+                  <button (click)="acceptRequest(group.groupId, request.username)">Accept</button>
+                  <button (click)="denyRequest(group.groupId, request.username)">Deny</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  
