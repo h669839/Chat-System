@@ -1,0 +1,47 @@
+.user-dashboard {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .user-dashboard h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+  
+  .group-list {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+  }
+  
+  .group-list ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .group-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .group-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .group-list button {
+    margin-right: 10px;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+  }
+  
+  .group-list select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  

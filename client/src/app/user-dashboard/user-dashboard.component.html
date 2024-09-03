@@ -1,7 +1,7 @@
 <div class="user-dashboard">
     <h2>Welcome, {{ user.username }}!</h2>
   
-    <div>
+    <div class="group-list">
       <h3>Your Groups</h3>
       <ul>
         <li *ngFor="let group of groups">
@@ -11,7 +11,7 @@
       </ul>
     </div>
   
-    <div *ngIf="channels.length > 0">
+    <div class="group-list" *ngIf="channels.length > 0">
       <h3>Channels</h3>
       <ul>
         <li *ngFor="let channel of channels">
