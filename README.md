@@ -140,3 +140,6 @@ The Angular frontend communicates with the Node.js server using a REST API. Belo
 - Group Model: Represents group data including group name, admins, and associated channels.
   
 - Channel Model: Represents channel data including channel name, associated group, and users.
+
+## Author
+Created by Eivind W. Hustvedt (s5410063) for assignment 1 in 3813ICT Software Frameworks for Griffith University.
