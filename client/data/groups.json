@@ -1,0 +1,15 @@
+[
+    {
+      "groupId": "1",
+      "name": "Group 1",
+      "admins": ["super"],     
+      "channels": ["1"]      
+    },
+    {
+      "groupId": "2",
+      "name": "Group 2",
+      "admins": ["gAdmin"],
+      "channels": ["2"]
+    }
+  ]
+  

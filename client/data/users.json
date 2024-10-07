@@ -1,0 +1,43 @@
+[
+    {
+      "id": "1",
+      "username": "super",
+      "password": "123",  
+      "roles": ["Super Admin", "User"],
+      "groups": ["1"],
+      "ok": true
+    },
+    {
+      "id": "2",
+      "username": "gAdmin",
+      "password": "456",
+      "roles": ["Group Admin", "User"],
+      "groups": ["2"],
+      "ok": true
+    },
+    {
+      "id": "3",
+      "username": "user1",
+      "password": "789",
+      "roles": ["User"],
+      "groups": ["1", "2"],
+      "ok": true
+    },
+    {
+      "id": "4",
+      "username": "user2",
+      "password": "987",
+      "roles": ["User"],
+      "groups": ["1"],
+      "ok": true
+    },
+    {
+      "id": "5",
+      "username": "user3",
+      "password": "654",
+      "roles": ["User"],
+      "groups": [],
+      "ok": true
+    }
+  ]
+  
