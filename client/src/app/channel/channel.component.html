@@ -1,26 +1,35 @@
-<div class="channel-management">
-    <h2>Channel Management</h2>
-  
-    <div>
-        <h3>Create Channel</h3>
-        <input type="text" [(ngModel)]="channelName" placeholder="Channel Name" />
-        <input type="text" [(ngModel)]="groupId" placeholder="Group ID" />
-        <button (click)="createChannel()">Create Channel</button>
-        <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
-        <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
-      </div>
-    
-  
-    <div class="channel-list">
-      <h3>Existing Channels</h3>
-      <ul>
-        <li *ngFor="let channel of channels">
-          {{ channel.channelName }} (Group ID: {{ channel.groupId }})
-          <input type="text" #username placeholder="Username to add/remove" />
-          <button (click)="addUserToChannel(channel.groupId, channel.channelId, username.value)">Add User</button>
-          <button (click)="removeUserFromChannel(channel.groupId, channel.channelId, username.value)">Remove User</button>
-        </li>
-      </ul>
-    </div>
+<div>
+  <h2>Manage Channels</h2>
+
+  <!-- Select Group to Load Channels -->
+  <label for="group-select">Select Group:</label>
+  <select id="group-select" [(ngModel)]="groupId" (ngModelChange)="loadChannels()">
+    <option value="" disabled selected>Select a Group</option>
+    <option *ngFor="let group of groups" [value]="group.groupId">{{ group.name }}</option>
+  </select>
+
+  <!-- List of Channels -->
+  <h3>Channels</h3>
+  <ul *ngIf="channels.length > 0">
+    <li *ngFor="let channel of channels">
+      <strong>{{ channel.channelName }}</strong>
+      <br />
+      <input type="text" #username placeholder="Username" />
+      <button (click)="addUserToChannel(groupId, channel.channelId, username.value)">Add User</button>
+      <button (click)="removeUserFromChannel(groupId, channel.channelId, username.value)">Remove User</button>
+    </li>
+  </ul>
+  <div *ngIf="channels.length === 0">
+    <p>No channels found for the selected group.</p>
   </div>
-  
+
+  <!-- Form to Create a New Channel -->
+  <h3>Create New Channel</h3>
+  <label for="channel-name">Channel Name:</label>
+  <input id="channel-name" type="text" [(ngModel)]="channelName" placeholder="Channel Name" />
+  <button (click)="createChannel()">Create Channel</button>
+
+  <!-- Display Success and Error Messages -->
+  <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+</div>

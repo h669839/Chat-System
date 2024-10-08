@@ -8,7 +8,9 @@ import { ChangeDetectorRef } from '@angular/core';
 
 
 const httpOptions = {
-  headers: new HttpHeaders({'Content-Type': 'application/json'})
+  headers: new HttpHeaders({
+    'Content-Type': 'application/json'
+  })
 };
 
 @Component({
@@ -32,8 +34,10 @@ export class LoginComponent {
   //Checks the if the login credentials are correct, and saves the user to localStorage.
   //It also redirects the user depending on their role.
   login() {
-   let user = {username:this.username, password:this.password};
-
+    console.log('Login button clicked');
+    let user = {username:this.username, password:this.password};
+    console.log('User data:', user);
+    
     this.http.post('http://localhost:3000/login', user, httpOptions)
       .subscribe({ 
         next: (response: any) => {  

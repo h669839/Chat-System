@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { SocketService } from '../socket.service';
 
 @Component({
   selector: 'app-chat',
@@ -10,27 +11,35 @@ import { CommonModule } from '@angular/common';
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, OnDestroy {
   messages: any[] = [];
   newMessage: string = '';
-  currentUser: any;
-  currentChannelId: string = '';
+  user: any;
   groups: any[] = [];
   channels: any[] = [];
   selectedGroupId: string = '';
   selectedChannelId: string = '';
   successMessage: string = '';
   errorMessage: string = '';
+  usersInChannel: string[] = [];
 
-  constructor(private http: HttpClient) {}
+
+
+  constructor(private http: HttpClient, private socketService: SocketService) {
+    this.user = JSON.parse(localStorage.getItem('user') || '{}');
+  }
 
   ngOnInit() {
-    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     this.loadGroups();
   }
+
+  ngOnDestroy() {
+    this.socketService.disconnect();
+  }
+
   //Loads all of the groups
   loadGroups() {
-    this.http.get('http://localhost:3000/groups')
+    this.http.get(`http://localhost:3000/groups`,  { params: { username: this.user.username } })
     .subscribe({
       next: (response: any) => {
         this.groups = response;
@@ -44,77 +53,76 @@ export class ChatComponent implements OnInit {
   //Loads all the channels in a specific group
   loadChannelsForGroup(groupId: string) {
     this.selectedGroupId = groupId;
-    const group = this.groups.find(g => g.groupId === groupId);
-    if (group && this.currentUser.groups.includes(groupId)) {
-      this.http.get('http://localhost:3000/channels')
+      this.http.get(`http://localhost:3000/groups/${groupId}/channels`)
         .subscribe({
           next: (response: any) => {
-            this.channels = response.filter((channel: any) => channel.groupId === groupId);
+            if(response.ok) {
+            this.channels = response.channels;
+            } else {
+              this.errorMessage = response.message;
+            }
           },
           error: () => {
             this.errorMessage = 'An error occurred while loading channels.';
           }
         });
-    } else {
-      this.errorMessage = 'You are not a member of this group. Please register interest to join.';
-    }
-  }
+      }
 
-  //User joins the channel to write a message.
-  joinChannel() {
-    if (this.selectedChannelId) {
-      this.currentChannelId = this.selectedChannelId;
-       // Load existing messages for the channel
-      this.loadMessages();
-    } else {
-      this.errorMessage = 'Please select a channel to join.';
+  // Join a channel and start receiving messages
+  joinChannel(channelId: string) {
+    if (!channelId || !this.user.username) {
+      this.errorMessage = 'Invalid channel or user.';
+      return;
     }
-  }
-
-  //Loads all of the messages.
-  loadMessages() {
-    if (this.currentChannelId) {
-      this.http.get(`http://localhost:3000/channels/${this.currentChannelId}/messages`)
-        .subscribe({
-          next: (response: any) => {
-            if (response.ok) {
-              this.messages = response.messages;
-            } else {
-              this.errorMessage = response.message;
-            }
-          },
-          error: () => {
-            this.errorMessage = 'An error occurred while loading messages.';
+  
+    this.selectedChannelId = channelId;
+  
+    // Connect the socket and join the channel
+    this.socketService.connect();
+    this.socketService.joinChannel(channelId, this.user.username);
+  
+    // Load existing messages for the channel
+    this.http.get(`http://localhost:3000/channels/${channelId}/messages`)
+      .subscribe({
+        next: (response: any) => {
+          if (response.ok) {
+            this.messages = response.messages;
+          } else {
+            this.errorMessage = response.message;
           }
-        });
-    }
+        },
+        error: () => {
+          this.errorMessage = 'An error occurred while loading messages.';
+        }
+      });
+  
+    // Listen for new messages
+    this.socketService.onMessage().subscribe((message) => {
+      this.messages.push(message);
+    });
   }
 
-  //Sends a message
+  
+  //Send message to a specific channel
   sendMessage() {
-    if (this.newMessage.trim() && this.currentChannelId) {
-      const message = { text: this.newMessage, sender: this.currentUser.username };
-
-      this.http.post(`http://localhost:3000/channels/${this.currentChannelId}/messages`, message)
-        .subscribe({
-          next: (response: any) => {
-            if (response.ok) {
-              this.messages.push(response.message);
-              this.newMessage = '';
-            } else {
-              this.errorMessage = response.message;
-            }
-          },
-          error: () => {
-            this.errorMessage = 'An error occurred while sending the message.';
-          }
-        });
+    if (!this.newMessage.trim()) {
+      this.errorMessage = 'Cannot send an empty message.';
+      return;
     }
-  }
 
+    const message = {
+      text: this.newMessage,
+      sender: this.user.username,
+      channelId: this.selectedChannelId
+    };
+
+    this.socketService.sendMessage(message);
+    this.newMessage = '';  // Clear the message input
+  }
+  
   //Register interest for a group the user is not a part of.
   registerInterestInGroup(groupId: string) {
-    this.http.post(`http://localhost:3000/groups/${groupId}/interest`, { username: this.currentUser.username })
+    this.http.post(`http://localhost:3000/groups/${groupId}/interest`, { username: this.user.username })
       .subscribe({
         next: (response: any) => {
           if (response.ok) {
@@ -131,7 +139,7 @@ export class ChatComponent implements OnInit {
 
   //Leaves the group
   leaveGroup(groupId: string) {
-    this.http.post(`http://localhost:3000/groups/${groupId}/leave`, { username: this.currentUser.username })
+    this.http.post(`http://localhost:3000/groups/${groupId}/leave`, { username: this.user.username })
       .subscribe({
         next: (response: any) => {
           if (response.ok) {
@@ -149,7 +157,7 @@ export class ChatComponent implements OnInit {
 
   //Deletes their own user.
   deleteUser() {
-    this.http.delete(`http://localhost:3000/users/${this.currentUser.id}`)
+    this.http.delete(`http://localhost:3000/users/${this.user.id}`)
       .subscribe({
         next: (response: any) => {
           if (response.ok) {

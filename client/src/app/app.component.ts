@@ -16,17 +16,18 @@ export class AppComponent implements OnInit {
   title = 'client';
 
   user: any;
+  selectedGroupId: any;
   isLoggedIn: boolean = false;
   isSuperAdmin: boolean = false;
   isGroupAdmin: boolean = false;
   isUser: boolean = false;
+  groups: any[] = [];
+  channels: any[] = [];
 
   constructor(private router: Router,private cdr: ChangeDetectorRef, private http: HttpClient) { }
 
   ngOnInit(): void {
     this.checkUserStatus();
-    this.loadGroupsFromServer();
-    this.loadChannelsFromServer();
   }
   //Checks what role the user is logged in as, and displays the corresponding navbar.
   checkUserStatus() {
@@ -44,6 +45,7 @@ export class AppComponent implements OnInit {
       else if(roles.includes('Group Admin')) {
         this.isGroupAdmin = true;
       }
+      this.loadGroupsFromServer();
       } 
     this.cdr.detectChanges();
   } 
@@ -59,34 +61,27 @@ export class AppComponent implements OnInit {
     this.isSuperAdmin = false;
     this.isGroupAdmin = false;
     this.isUser = false;
+    localStorage.clear();
     this.router.navigate(['/login']);
 
   }
 
-  //Loads all the groups on the server.
+  // Loads all the groups from the server for the current user
   loadGroupsFromServer() {
-    this.http.get('http://localhost:3000/groups').subscribe(
-      {next:
-      (response: any) => {
-        localStorage.setItem('groups', JSON.stringify(response));
-      }, error:
-      (error) => {
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  
+    if (!currentUser.username) {
+      console.error('No user found in local storage');
+      return;
+    }
+  
+    this.http.get('http://localhost:3000/groups', { params: { username: currentUser.username } }).subscribe({
+      next: (response: any) => {
+        this.groups = response;
+      },
+      error: (error) => {
         console.error('Failed to load groups from server', error);
       }
-    }
-    );
-  }
-
-  //Loads all the channels on the server.
-  loadChannelsFromServer() {
-    this.http.get('http://localhost:3000/channels').subscribe(
-      {next: (response: any) => {
-        localStorage.setItem('channels', JSON.stringify(response));
-      }, error:
-      (error) => {
-        console.error('Failed to load channels from server', error);
-      }
-    }
-    );
-  }
+    });
+  }  
 }

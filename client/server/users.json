@@ -4,7 +4,7 @@
       "username": "super",
       "password": "123",  
       "roles": ["Super Admin", "User"],
-      "groups": ["1"],
+      "groups": ["1", "2"],
       "ok": true
     },
     {

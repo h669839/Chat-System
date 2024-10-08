@@ -28,15 +28,15 @@ export class GroupComponent {
 
   //Loads groups, and filters after roles.
   loadGroups() {
-    this.http.get('http://localhost:3000/groups')
+    this.http.get('http://localhost:3000/groups', { params: { username: this.user.username } })
       .subscribe({
         next: (response: any) => {
           if (this.user.roles.includes('Super Admin')) {
             // Super Admin can see all groups
             this.groups = response;
-          } else if (this.user.roles.includes('Group Admin')) {
+          } else {
             // Group Admin can only see groups they created
-            this.groups = response.filter((group: any) => group.admins.includes(this.user.username));
+            this.groups = response.filter((group: any) => this.user.groups.includes(group.groupId));
           }
         },
         error: () => {

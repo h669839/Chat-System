@@ -22,48 +22,67 @@ export class UserDashboardComponent {
     this.loadUserGroups();
   }
 
-  //Loads all the groups a user is a part in
+  // Loads all the groups the user is part of from the server
   loadUserGroups() {
-    if (localStorage.getItem('groups')) {
-      const allGroups = JSON.parse(localStorage.getItem('groups') || '[]');
-      this.groups = allGroups.filter((group: any) => this.user.groups.includes(group.groupId));
-    } else {
-      this.errorMessage = 'No groups found in local storage.';
-    }
-
+    this.http.get('http://localhost:3000/groups', { params: { username: this.user.username } })
+      .subscribe({
+        next: (response: any) => {
+          this.groups = response;
+          if (this.groups.length === 0) {
+            this.errorMessage = 'You are not part of any groups.';
+          }
+        },
+        error: () => {
+          this.errorMessage = 'Failed to load groups from the server.';
+        }
+      });
   }
 
-  //Loads all the channels a user is a part in.
+  // Loads all channels for the selected group from the server
   loadUserChannels(groupId: string) {
     this.selectedGroupId = groupId;
-    if (localStorage.getItem('channels')) {
-      const allChannels = JSON.parse(localStorage.getItem('channels') || '[]');
-      this.channels = allChannels.filter((channel: any) => channel.groupId === groupId);
-    } else {
-      this.errorMessage = 'No channels found in local storage.';
+
+    if (!groupId) {
+      this.errorMessage = 'No group selected.';
+      return;
     }
+
+    this.http.get(`http://localhost:3000/groups/${groupId}/channels`)
+      .subscribe({
+        next: (response: any) => {
+          if (response.ok) {
+            this.channels = response.channels;
+          } else {
+            this.errorMessage = response.message || 'No channels found for the selected group.';
+          }
+        },
+        error: () => {
+          this.errorMessage = 'Failed to load channels from the server.';
+        }
+      });
   }
 
-  //A user joins a channel if they are not a part of it already.
+  // A user joins a channel if they are not already a part of it
   joinChannel(channelId: string) {
     if (this.user && this.selectedGroupId && channelId) {
-      const allChannels = JSON.parse(localStorage.getItem('channels') || '[]');
-      const channel = allChannels.find((ch: any) => ch.channelId === channelId);
+      const channelData = { username: this.user.username };
 
-      if (channel) {
-        if (!channel.users.includes(this.user.username)) {
-          channel.users.push(this.user.username);
-          localStorage.setItem('channels', JSON.stringify(allChannels));
-          this.successMessage = `You have successfully joined the channel ${channel.channelName}.`;
-        } else {
-          this.errorMessage = 'You are already a member of this channel.';
-        }
-      } else {
-        this.errorMessage = 'Channel not found.';
-      }
+      this.http.post(`http://localhost:3000/groups/${this.selectedGroupId}/channels/${channelId}/users`, channelData)
+        .subscribe({
+          next: (response: any) => {
+            if (response.ok) {
+              this.successMessage = `You have successfully joined the channel ${response.channel.channelName}.`;
+              this.loadUserChannels(this.selectedGroupId); // Reload channels to update membership
+            } else {
+              this.errorMessage = response.message || 'Could not join the channel.';
+            }
+          },
+          error: () => {
+            this.errorMessage = 'Failed to join the channel.';
+          }
+        });
     } else {
       this.errorMessage = 'Could not join the channel. Ensure you are logged in and a group/channel is selected.';
     }
   }
-
 }
