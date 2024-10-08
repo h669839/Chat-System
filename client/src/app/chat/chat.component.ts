@@ -102,6 +102,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+   // Leave the current channel
+   leaveChannel() {
+    if (this.selectedChannelId) {
+      this.socketService.onUserLeft();
+      this.selectedChannelId = '';
+      this.messages = [];
+    }
+  }
   
   //Send message to a specific channel
   sendMessage() {

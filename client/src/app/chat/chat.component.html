@@ -27,6 +27,7 @@
       <option *ngFor="let channel of channels" [value]="channel.channelId">{{ channel.channelName }}</option>
     </select>
     <button (click)="joinChannel(selectedChannelId)">Join Channel</button>
+    <button (click)="leaveChannel()">Leave Channel</button>
   </div>
   
   <!-- Chat Messages -->

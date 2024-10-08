@@ -41,15 +41,20 @@ export class ChannelComponent {
       this.errorMessage = 'No group selected to load channels.';
       return;
     }
-
     this.http.get(`http://localhost:3000/groups/${this.groupId}/channels`)
       .subscribe({
         next: (response: any) => {
           if (response.ok) {
             this.channels = response.channels;
-            this.successMessage = 'Channels loaded successfully.';
+
+            // Handle the case where no channels exist for this group
+            if (this.channels.length === 0) {
+              this.successMessage = 'No channels found. You can create a new channel for this group.';
+            } else {
+              this.successMessage = 'Channels loaded successfully.';
+            }
           } else {
-            this.errorMessage = response.message || 'No channels found.';
+            this.errorMessage = response.message || 'Failed to load channels.';
           }
         },
         error: () => {
@@ -64,6 +69,8 @@ export class ChannelComponent {
       this.errorMessage = 'Please provide a group ID and channel name.';
       return;
     }
+    // Log the data being sent
+    console.log('Creating channel for group:', this.groupId, 'with name:', this.channelName);
 
     this.http.post('http://localhost:3000/channels', { groupId: this.groupId, channelName: this.channelName })
       .subscribe({

@@ -76,6 +76,11 @@ app.post('/login', (req, res) => {
   }
 });
 
+// Route to get all the users
+app.get('/users', (req,res) => {
+  res.json(users);
+})
+
 // Route to create a new user
 app.post('/users', (req, res) => {
   const { username, email, role } = req.body;
@@ -89,9 +94,10 @@ app.post('/users', (req, res) => {
     id: (users.length + 1).toString(),
     username,
     email,
-    password: 'default_password', // Initial password
+    password: 'password', // Initial password
     roles: [role],
-    groups: []
+    groups: [],
+    ok: true,
   };
 
   users.push(newUser);
@@ -150,24 +156,42 @@ app.get('/groups', (req, res) => {
 app.post('/group', (req, res) => {
   const { name, admin } = req.body;
 
+  const adminUser = users.find(u => u.username === admin);
+  if (!adminUser) {
+    return res.status(404).json({ ok: false, message: 'Admin not found' });
+  }
+
+  // Find all Super Admins
+  const superAdmins = users
+    .filter(user => user.roles.includes('Super Admin'))
+    .map(user => user.username); // Get the usernames of all Super Admins
+
   const newGroup = {
     groupId: (groups.length + 1).toString(),
     name,
-    admins: [admin],
+    admins: [admin, ...superAdmins],
     channels: []
   };
 
   groups.push(newGroup);
-  writeJSONFile('./groups.json', groups); // Write new group to groups.json
+
+   // Add the newly created group to the admin's groups array if not already present
+   if (!adminUser.groups.includes(newGroup.groupId)) {
+    adminUser.groups.push(newGroup.groupId);
+  }
+
+  // Write changes to groups.json and users.json
+  writeJSONFile('./groups.json', groups);
+  writeJSONFile('./users.json', users);
 
   res.json({ ok: true, group: newGroup });
 });
 
-// Add a user to a group (Super Admins can add to any group)
+// Add a user to a group (Super Admins or Group Admins can add users to their group)
 app.post('/groups/:groupId/users', (req, res) => {
   const { groupId } = req.params;
-  const { username } = req.body;
-  
+  const { username, admin } = req.body; // Expecting the admin (the person who is trying to add the user)
+
   const group = groups.find(g => g.groupId === groupId);
   if (!group) {
     return res.status(404).json({ ok: false, message: 'Group not found' });
@@ -178,18 +202,19 @@ app.post('/groups/:groupId/users', (req, res) => {
     return res.status(404).json({ ok: false, message: 'User not found' });
   }
 
-  // Allow Super Admins to add users to any group
-  const adminUser = users.find(u => u.username === req.body.admin && (u.roles.includes('Group Admin') || u.roles.includes('Super Admin')));
+  // Check if the user performing the action is a Super Admin or Group Admin
+  const adminUser = users.find(u => u.username === admin && (u.roles.includes('Group Admin') || u.roles.includes('Super Admin')));
   if (!adminUser) {
     return res.status(403).json({ ok: false, message: 'Only Group Admins or Super Admins can add users to a group.' });
   }
 
+  // Check if the user is already in the group
   if (!user.groups.includes(groupId)) {
     user.groups.push(groupId);
-    writeJSONFile('./users.json', users); // Update users.json
-    res.json({ ok: true, message: `User ${username} added to the group.` });
+    writeJSONFile('./users.json', users); // Update users.json with the new group added for the user
+    return res.json({ ok: true, message: `User ${username} added to the group successfully.` });
   } else {
-    res.status(400).json({ ok: false, message: 'User already in the group' });
+    return res.status(400).json({ ok: false, message: 'User is already in the group.' });
   }
 });
 
@@ -214,6 +239,9 @@ app.delete('/groups/:groupId/users/:username', (req, res) => {
 app.post('/channels', async (req, res) => {
   const { groupId, channelName } = req.body;
 
+  // Log the incoming data
+  console.log('Creating channel for group:', groupId, 'with name:', channelName);
+
   // Fetch groups from groups.json to check if the group exists
   const group = groups.find(g => g.groupId === groupId);
 
@@ -221,34 +249,30 @@ app.post('/channels', async (req, res) => {
     return res.status(404).json({ ok: false, message: 'Group not found' });
   }
 
-  // Count the number of channels
-  channelsCollection.countDocuments({}, (err, count) => {
-    if (err) {
-      return res.status(500).json({ ok: false, message: 'Failed to count channels' });
-    }
+  try {
+    // Create a new channelId based on the number of channels already in the database
+    const newChannelId = (await channelsCollection.countDocuments()) + 1;
 
-    // Calculate the new channelId based on count
-    const newChannelId = count + 1;
+    const newChannel = {
+      channelId: newChannelId,
+      channelName,
+      groupId,
+      users: [], // Initialize with no users
+      messages: [] // Initialize with no messages
+    };
 
-  // Create the new channel object
-  const newChannel = {
-    channelId: newChannelId,
-    channelName,
-    groupId,
-    users: [],
-    messages:[],
-  };
-    // Insert the new channel into MongoDB
-    channelsCollection.insertOne(newChannel, (err, result) => {
-      if (err) {
-        return res.status(500).json({ ok: false, message: 'Failed to create channel' });
-      }
-    // Update groups.json to add the channel to the group (depends on how you manage groups.json)
+    // Insert the new channel into the channels collection
+    await channelsCollection.insertOne(newChannel);
+
+    // Add the channelId to the group's channel list
     group.channels.push(newChannelId);
-    writeJSONFile('./groups.json', groups);
-    res.json({ ok: true, channel: result.ops[0] });
-    });
-  });
+    writeJSONFile('./groups.json', groups); // Update groups.json with the new channel
+
+    res.json({ ok: true, channel: newChannel });
+  } catch (error) {
+    console.error('Error while creating channel:', error);
+    res.status(500).json({ ok: false, message: 'Failed to create the channel.' });
+  };
 });
 
 // Route to get channels for a group
@@ -266,19 +290,14 @@ app.get('/groups/:groupId/channels', async (req, res) => {
 
   const channelIds = group.channels;
   if (!channelIds || channelIds.length === 0) {
-    return res.status(404).json({ ok: false, message: 'No channels found in this group.' });
+    // No channels found, but this is not an error – return an empty array
+    return res.json({ ok: true, channels: [] });
   }
-  console.log("Channel Id's: " + channelIds);
 
   try {
     // Query the channels collection in MongoDB using the channelIds
     const channels = await channelsCollection.find({ channelId: { $in: channelIds } }).toArray();
     
-    // If no channels are found
-    if (!channels || channels.length === 0) {
-      return res.status(404).json({ ok: false, message: 'No channels found for this group' });
-    }
-
     // Return the found channels
     return res.json({ ok: true, channels });
   } catch (err) {

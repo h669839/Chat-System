@@ -81,23 +81,26 @@ export class GroupComponent {
       });
   }
 
-  //Adds a user to that specific group.
-  addUserToGroup(groupId: string, username: string) {
-    this.http.post(`http://localhost:3000/groups/${groupId}/users`, { username })
-      .subscribe({
-        next: (response: any) => {
-          if (response.ok) {
-            this.successMessage = 'User added to group successfully';
-            this.loadGroups();
-          } else {
-            this.errorMessage = response.message;
-          }
-        },
-        error: () => {
-          this.errorMessage = 'An error occurred while adding the user to the group.';
+  // Add a user to the specific group
+addUserToGroup(groupId: string, username: string) {
+  const currentAdmin = JSON.parse(localStorage.getItem('user') || '{}').username; // Get the current logged-in admin
+
+  this.http.post(`http://localhost:3000/groups/${groupId}/users`, { username, admin: currentAdmin }) // Pass admin
+    .subscribe({
+      next: (response: any) => {
+        if (response.ok) {
+          this.successMessage = 'User added to group successfully';
+          this.loadGroups();
+        } else {
+          this.errorMessage = response.message;
         }
-      });
-  }
+      },
+      error: () => {
+        this.errorMessage = 'An error occurred while adding the user to the group.';
+      }
+    });
+}
+
 
    //Removes a user to that specific group.
   removeUserFromGroup(groupId: string, username: string) {

@@ -40,14 +40,22 @@ module.exports = {
         socket.on('joinChannel', (channelId, username) => {
             socket.join(channelId);
             console.log(`${username} joined channel ${channelId}`);
-            io.to(channelId).emit('userJoined', { username });
+            io.to(channelId).emit('message', {
+                text: `${username} has joined the channel.`,
+                sender: 'System',
+                timestamp: new Date().toISOString()
+            });
         });
 
         // Handle users leaving channels
         socket.on('leaveChannel', (channelId, username) => {
             socket.leave(channelId);
             console.log(`${username} left channel ${channelId}`);
-            io.to(channelId).emit('userLeft', { username });
+            io.to(channelId).emit('message', {
+                text: `${username} has left the channel.`,
+                sender: 'System',
+                timestamp: new Date().toISOString()
+            });
         });
 
         socket.on('disconnect', () => {
