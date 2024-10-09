@@ -11,19 +11,26 @@ The project is built using the MEAN stack(MongoDB, Express, Angular, Node.js) an
 ``` bash
 /chat-system
 │
-├── /client               # Angular frontend application
+├── /client                   # Angular frontend application
 │   ├── /src
-│   │   ├── /app          # Angular components, services, and modules
-│   │   ├── index.html    # Main HTML file for the Angular application
-│   │   └── main.ts       # Entry point for the Angular application
+│   │   ├── /app              # Angular components, services, and modules
+│   │   ├── index.html        # Main HTML file for the Angular application
+│   │   └── main.ts           # Entry point for the Angular application
 │   ├── /server               # Node.js backend application
+│   │   ├── users.json        # JSON file for storing users.
+│   │   ├── groups.json       # JSON file for storing groups.
 │   │   ├── index.js          # Entry point for the Node.js server
+│   │   ├── socket.js         # Socket.io integrated for real-time chat.
+│   │   └── listen.js         # Connection between server and client.
 │   ├── package.json          # NPM dependencies and scripts
 │   ├── .gitignore            # Specifies files to be ignored by Git
-│   └── angular.json      # Angular CLI configuration
+│   └── angular.json          # Angular CLI configuration
 │
-└── README.md             # Documentation of the project
+└── README.md                 # Documentation of the project
 ```
+### Usage of Git Repository
+Having a safe place to store the project. Used it to store the finished methods once I was satisfied with the result. Changes made locally than commit and push when the methods are complete.
+
 ## Data Structures
 ### Users
 Users are represented as objects with the following structure:
@@ -54,8 +61,31 @@ Channels are represented as objects with the following structure:
   channelName: 'General',
   groupId: 'groupId1',     // The group to which the channel belongs
   users: ['userId1']       // Array of user IDs who have joined the channel
+  messages: [{             // Messages stored in chat history.
+         text: 'Hello',
+         sender: 'user1',
+         }],
 }
 ```
+## Client-Server Responsibilities
+### Client: 
+- Angular Application: The frontend, built using Angular, is responsible for user interaction and sending HTTP requests to the backend.
+  
+   - Authentication: Users log in via the Angular frontend, which then communicates with the server for user validation.
+ 
+   - REST API Communication: All interactions (e.g., group/channel management, message sending) are handled through HTTP requests to the Node.js server.
+ 
+   - Socket.IO Integration: The client listens for real-time updates such as new messages or notifications when users join or leave channels.
+
+### Server
+- Node.js + Express Server: The backend handles routing, user authentication, group/channel management, and message processing.
+  
+   - REST API: Provides endpoints for managing users, groups, channels, and messages.
+ 
+   - Socket.IO: Manages real-time communication between clients for chat functionality.
+ 
+   - MongoDB: Stores channels and chat messages (JSON files are used to store users and groups).
+
 ## REST API
 ### Overview
 The Angular frontend communicates with the Node.js server using a REST API. Below are the main API routes provided by the server:
@@ -140,6 +170,13 @@ The Angular frontend communicates with the Node.js server using a REST API. Belo
 - Group Model: Represents group data including group name, admins, and associated channels.
   
 - Channel Model: Represents channel data including channel name, associated group, and users.
+
+## Client-Server Integration
+- Login Process: Users log in through the LoginComponent. Upon successful login, their role and data are stored locally, and they are routed to their respective dashboards.
+
+- Group/Channel Interaction: Users can view groups and channels from the client. When a user selects a group or channel, a request is sent to the server to fetch the corresponding data (via the HttpClient service).
+
+- Real-Time Chat: The ChatComponent uses Socket.IO to handle real-time messaging between users. When a message is sent, it is broadcast to other users in the same channel, and the chat history is updated accordingly.
 
 ## Author
 Created by Eivind W. Hustvedt (s5410063) for assignment 1 in 3813ICT Software Frameworks for Griffith University.
