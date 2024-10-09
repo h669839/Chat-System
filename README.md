@@ -60,7 +60,7 @@ Channels are represented as objects with the following structure:
   channelId: 'channelId1',
   channelName: 'General',
   groupId: 'groupId1',     // The group to which the channel belongs
-  users: ['userId1']       // Array of user IDs who have joined the channel
+  users: ['userId1'],      // Array of user IDs who have joined the channel
   messages: [{             // Messages stored in chat history.
          text: 'Hello',
          sender: 'user1',
